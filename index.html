@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Cyberpunk Config Renamer ⚡</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Orbitron', sans-serif;
+  background: radial-gradient(circle at top left, #0a0f1c, #05060a 70%);
+  color:#e0f7ff;
+  overflow:hidden;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+}
+
+.card{
+  max-width:800px;
+  margin:50px auto;
+  padding:25px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(0,255,255,0.2);
+  box-shadow:0 0 40px rgba(0,229,255,0.15);
+}
+
+h2{
+  text-align:center;
+  color:#00e5ff;
+  text-shadow:0 0 10px #00e5ff,0 0 20px #ff00c8;
+}
+
+textarea,input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  background:rgba(255,255,255,0.07);
+  color:#e0f7ff;
+  font-size:13px;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+}
+
+textarea{
+  height:170px;
+  resize:none;
+}
+
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+  flex-wrap:wrap;
+}
+
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  background:linear-gradient(90deg,#00e5ff,#ff00c8);
+  color:white;
+  box-shadow:0 0 15px rgba(0,229,255,0.4);
+  transition:0.2s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 25px rgba(0,229,255,0.8);
+}
+
+.counter{
+  margin-top:10px;
+  font-size:13px;
+  color:#00ffea;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="card">
+<h2>⚡ Cyberpunk Config Renamer ⚡</h2>
+
+<label>کانفیگ‌ها:</label>
+<textarea id="configs" placeholder="هر خط یک کانفیگ"></textarea>
+
+<label>اسم جدید بعد از پرچم:</label>
+<input type="text" id="panelName" placeholder="مثال: MyChannel">
+
+<label>اسم فایل خروجی:</label>
+<input type="text" id="fileName" placeholder="مثال: configs">
+
+<div class="buttons">
+<button onclick="processConfigs()">✨ Rename</button>
+<button onclick="downloadFile()">⬇ Download</button>
+<button onclick="clearAll()">🗑 Clear</button>
+</div>
+
+<div class="counter" id="counter"></div>
+
+<label>خروجی:</label>
+<textarea id="output"></textarea>
+
+</div>
+
+<script>
+let finalConfigs="";
+
+function processConfigs(){
+  let input=document.getElementById("configs").value.trim();
+  let name=document.getElementById("panelName").value.trim();
+
+  if(!input||!name){alert("فیلدها را کامل کن");return;}
+
+  let lines=input.split("\n").filter(l=>l.trim()!=="");
+  let output=[];
+
+  lines.forEach(line=>{
+    if(line.includes("#")){
+      let index=line.indexOf("#");
+      let base=line.substring(0,index+1);
+      let tagEncoded=line.substring(index+1);
+      let tagDecoded=decodeURIComponent(tagEncoded);
+      let flagMatch=tagDecoded.match(/^\[[^\]]+\]/);
+      let flag=flagMatch?flagMatch[0]:"";
+      let newTag=flag+name;
+      output.push(base+encodeURIComponent(newTag));
+    }else{
+      output.push(line);
+    }
+  });
+
+  finalConfigs=output.join("\n");
+  document.getElementById("output").value=finalConfigs;
+  document.getElementById("counter").innerText="Processed: "+output.length+" configs";
+}
+
+function downloadFile(){
+  if(!finalConfigs){alert("اول Rename کن");return;}
+  let fileName=document.getElementById("fileName").value.trim();
+  if(!fileName){alert("اسم فایل وارد کن");return;}
+
+  let blob=new Blob([finalConfigs],{type:"text/plain"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=fileName+".txt";
+  a.click();
+}
+
+function clearAll(){
+  document.getElementById("configs").value="";
+  document.getElementById("output").value="";
+  document.getElementById("counter").innerText="";
+  finalConfigs="";
+}
+
+/* Stars animation */
+const canvas=document.getElementById("stars");
+const ctx=canvas.getContext("2d");
+let W,H,stars=[];
+
+function resize(){
+  W=canvas.width=innerWidth;
+  H=canvas.height=innerHeight;
+}
+window.addEventListener("resize",resize);
+resize();
+
+for(let i=0;i<120;i++){
+  stars.push({
+    x:Math.random()*W,
+    y:Math.random()*H,
+    r:Math.random()*1.5+0.5,
+    d:Math.random()*0.5
+  });
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#0ff";
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+    s.y+=s.d;
+    if(s.y>H){s.y=0;s.x=Math.random()*W;}
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+</body>
+</html>
